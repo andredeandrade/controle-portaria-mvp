@@ -42,15 +42,16 @@ services:
       - '${API_PORT:-3333}:3333'
     command: sh -c "pnpm prisma migrate deploy && node dist/server.js"
     # O servidor só abre a porta depois das migrations (comando acima), então
-    # responder HTTP indica que o banco está pronto. `/` fica fora do rate
-    # limiter de /api; um 404 conta como saudável.
+    # responder em /health indica que o banco está pronto. /health é liveness
+    # (não consulta o banco), fica fora do rate limiter de /api e só conta como
+    # saudável com status 2xx.
     healthcheck:
       test:
         [
           'CMD',
           'node',
           '-e',
-          "fetch('http://localhost:' + (process.env.PORT || 3333) + '/').then(() => process.exit(0), () => process.exit(1))",
+          "fetch('http://localhost:' + (process.env.PORT || 3333) + '/health').then((res) => process.exit(res.ok ? 0 : 1), () => process.exit(1))",
         ]
       interval: 5s
       timeout: 5s

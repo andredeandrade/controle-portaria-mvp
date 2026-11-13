@@ -15,6 +15,7 @@ import express, { type Request, type Response, type NextFunction } from 'express
 import cors from 'cors'
 import helmet from 'helmet'
 import { env } from './config/env.js'
+import { healthRouter } from './modules/health/index.js'
 import { router } from './routes/index.js'
 import { HttpError } from './lib/http-error.js'
 import { apiRateLimiter } from './middlewares/rate-limit.js'
@@ -38,6 +39,9 @@ app.use(
     allowedHeaders: ['Content-Type', 'Authorization'],
   }),
 )
+
+// Health checks: fora de /api de propósito, então ficam fora do rate limiter abaixo e sem auth.
+app.use('/health', healthRouter)
 
 // Limite global de requisições por IP
 app.use('/api', apiRateLimiter)
@@ -69,11 +73,9 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   // Erros do body-parser (JSON inválido, body grande demais) trazem status 4xx
   const status = (err as { status?: unknown }).status
   if (typeof status === 'number' && status >= 400 && status < 500) {
-    res
-      .status(status)
-      .json({
-        error: status === 413 ? 'Corpo da requisição muito grande.' : 'Requisição inválida.',
-      })
+    res.status(status).json({
+      error: status === 413 ? 'Corpo da requisição muito grande.' : 'Requisição inválida.',
+    })
     return
   }
 
