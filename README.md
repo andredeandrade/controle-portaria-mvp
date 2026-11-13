@@ -95,7 +95,7 @@ Navegador ──► Next.js (web :3000)
 
 ```bash
 ./scripts/setup-env.sh
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d -V
 docker compose exec api pnpm seed
 ```
 
@@ -211,7 +211,7 @@ Para desenvolvimento com atualização automática (hot reload) no frontend e ba
 Subir ambiente dev:
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d -V
 ```
 
 Acompanhar logs do web e api:
@@ -231,6 +231,8 @@ Com esse modo:
 - `web` roda com `next dev` (Turbopack)
 - `api` roda com `tsx watch`
 - alterações em `web/` e `api/` são refletidas automaticamente sem rebuild completo da imagem
+- `node_modules` de `web` e `api` vêm da imagem (volumes anônimos), não do host — não é preciso rodar `pnpm install` na máquina para usar o Docker
+- a flag `-V` (`--renew-anon-volumes`) recria esses volumes a cada `up`; sem ela, depois de mudar dependências o container continuaria usando o `node_modules` antigo
 
 ## Dados de teste (seed)
 
@@ -248,7 +250,7 @@ O que ele faz:
 Pelo Docker (ambiente dev, que já roda `prisma generate` e `migrate deploy` ao subir a API):
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d -V
 docker compose exec api pnpm seed
 ```
 
