@@ -1,6 +1,10 @@
 import type { Request, Response } from 'express'
+import { isDemoMode } from '../../config/env.js'
 import { HttpError } from '../../lib/http-error.js'
 import { condominiumsService } from './condominiums.service.js'
+
+export const DEMO_SLUG_CHANGE_DISABLED_MESSAGE =
+  'Indisponível no ambiente de demonstração: não é possível alterar o slug do condomínio.'
 
 function getBodyAsRecord(body: unknown): Record<string, unknown> {
   if (!body || typeof body !== 'object') {
@@ -57,10 +61,16 @@ export const condominiumsController = {
     }
 
     const body = getBodyAsRecord(req.body)
+    const slug = readOptionalString(body['slug'])
+
+    // Na demo o slug é o endereço do único tenant: trocá-lo derruba o login de todos.
+    if (isDemoMode() && slug !== undefined) {
+      throw new HttpError(403, DEMO_SLUG_CHANGE_DISABLED_MESSAGE)
+    }
 
     const condominium = await condominiumsService.updateOwn(req.authUser.condominiumId, {
       name: readOptionalString(body['name']),
-      slug: readOptionalString(body['slug']),
+      slug,
     })
 
     res.json(condominium)

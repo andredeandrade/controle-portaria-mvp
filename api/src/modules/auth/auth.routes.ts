@@ -12,7 +12,8 @@ export const authRouter = Router()
  * POST /register aceita dois modos:
  * - Bootstrap: header `x-platform-setup-secret` válido → cria o primeiro
  *   usuário de um condomínio novo, sem exigir sessão autenticada;
- *   `condominiumId` vem do body (ver auth.controller.ts).
+ *   `condominiumId` vem do body (ver auth.controller.ts). Em `DEMO_MODE` o segredo
+ *   nunca vale (`hasValidPlatformSecret`), então só resta o modo normal.
  * - Normal: sem secret válido → exige um ADMIN autenticado, que só pode
  *   criar usuários dentro do próprio tenant.
  */
