@@ -13,7 +13,6 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useLogin } from '../hooks/useLogin'
 import { TextField, TextFieldLabel, TextFieldStack } from '@/modules/form'
-import { extractTenantSlugFromHost } from '@/lib/auth/session'
 import { useAppSnackbar } from '@/providers'
 
 type LoginFormData = {
@@ -42,13 +41,8 @@ export function LoginFormFields() {
   }
 
   const onSubmit = async (data: LoginFormData) => {
-    const condominiumSlug = extractTenantSlugFromHost(
-      typeof window === 'undefined' ? null : window.location.host,
-    )
-
     try {
       await loginMutation.mutateAsync({
-        condominiumSlug: condominiumSlug ?? undefined,
         email: data.email,
         password: data.password,
       })

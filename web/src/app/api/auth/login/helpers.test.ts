@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { getFetchCall, jsonResponse, mockFetch, textResponse, type FetchMock } from '@test/fetch'
 
@@ -20,6 +20,10 @@ function requestWithHost(host: string | null): Request {
 }
 
 describe('resolveTenantSlugFromRequest', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
   it('usa o slug do subdomínio quando o corpo não informa', () => {
     expect(resolveTenantSlugFromRequest(requestWithHost('demo.localhost:3000'), {})).toBe('demo')
   })
@@ -44,6 +48,36 @@ describe('resolveTenantSlugFromRequest', () => {
     expect(
       resolveTenantSlugFromRequest(requestWithHost('demo.localhost'), { condominiumSlug: 123 }),
     ).toBe('demo')
+  })
+
+  it('usa DEFAULT_TENANT_SLUG quando o host não traz tenant', () => {
+    vi.stubEnv('DEFAULT_TENANT_SLUG', 'demo')
+
+    expect(resolveTenantSlugFromRequest(requestWithHost('localhost:3000'), {})).toBe('demo')
+    expect(resolveTenantSlugFromRequest(requestWithHost(null), {})).toBe('demo')
+  })
+
+  it('na demo (APP_ROOT_DOMAIN = host do app) cai no tenant padrão em vez do 1º label', () => {
+    vi.stubEnv('APP_ROOT_DOMAIN', 'controle-portaria.vercel.app')
+    vi.stubEnv('DEFAULT_TENANT_SLUG', 'demo')
+
+    expect(resolveTenantSlugFromRequest(requestWithHost('controle-portaria.vercel.app'), {})).toBe(
+      'demo',
+    )
+  })
+
+  it('o subdomínio do host tem prioridade sobre DEFAULT_TENANT_SLUG', () => {
+    vi.stubEnv('DEFAULT_TENANT_SLUG', 'demo')
+
+    expect(resolveTenantSlugFromRequest(requestWithHost('alfa.localhost:3000'), {})).toBe('alfa')
+  })
+
+  it('o slug do corpo tem prioridade sobre DEFAULT_TENANT_SLUG', () => {
+    vi.stubEnv('DEFAULT_TENANT_SLUG', 'demo')
+
+    expect(
+      resolveTenantSlugFromRequest(requestWithHost('localhost:3000'), { condominiumSlug: 'beta' }),
+    ).toBe('beta')
   })
 
   it.each(['localhost:3000', '127.0.0.1:3000', null])(

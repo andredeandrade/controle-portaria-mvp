@@ -63,6 +63,8 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: ${NODE_ENV:-production}
+      APP_ROOT_DOMAIN: ${APP_ROOT_DOMAIN:-}
+      DEFAULT_TENANT_SLUG: ${DEFAULT_TENANT_SLUG:-}
     depends_on:
       api:
         condition: service_healthy

@@ -14,6 +14,18 @@ export function getApiBaseUrls(): string[] {
   return Array.from(new Set(normalized))
 }
 
+/**
+ * Extrai o slug do condomínio a partir do header `Host`.
+ *
+ * - `*.localhost` (dev): o primeiro label é o slug.
+ * - Com `APP_ROOT_DOMAIN` definido (ex.: `portaria.com.br`): só hosts que são
+ *   subdomínios desse domínio têm tenant; o domínio raiz em si retorna `null`.
+ *   Em hospedagens sem subdomínio por tenant (ex.: `app.vercel.app`), aponte
+ *   `APP_ROOT_DOMAIN` para o próprio host e use `DEFAULT_TENANT_SLUG`.
+ * - Sem `APP_ROOT_DOMAIN`: heurística legada (3+ labels, o primeiro é o slug).
+ *
+ * `www` nunca é tenant. Retorna `null` quando não há tenant no host.
+ */
 export function extractTenantSlugFromHost(hostHeader: string | null): string | null {
   if (!hostHeader) {
     return null
@@ -26,28 +38,42 @@ export function extractTenantSlugFromHost(hostHeader: string | null): string | n
   }
 
   const hostParts = host.split('.').filter(Boolean)
+  const rootDomain = getAppRootDomain()
+
+  let tenantSlug: string | undefined
 
   if (host.endsWith('.localhost') && hostParts.length >= 2) {
-    const tenantSlug = hostParts[0]
-
-    if (!tenantSlug || tenantSlug === 'www') {
-      return null
-    }
-
-    return tenantSlug
+    tenantSlug = hostParts[0]
+  } else if (rootDomain) {
+    tenantSlug = host.endsWith(`.${rootDomain}`) ? hostParts[0] : undefined
+  } else if (hostParts.length >= 3) {
+    tenantSlug = hostParts[0]
   }
-
-  if (hostParts.length < 3) {
-    return null
-  }
-
-  const tenantSlug = hostParts[0]
 
   if (!tenantSlug || tenantSlug === 'www') {
     return null
   }
 
   return tenantSlug
+}
+
+function getAppRootDomain(): string | null {
+  const value = process.env.APP_ROOT_DOMAIN?.trim()
+    .toLowerCase()
+    .replace(/^\.+|\.+$/g, '')
+
+  return value ? value : null
+}
+
+/**
+ * Slug do condomínio usado quando o host não traz tenant (ex.: demo pública em
+ * `*.vercel.app`). Definido por `DEFAULT_TENANT_SLUG`; `null` se ausente ou inválido.
+ * Somente servidor: não use no cliente.
+ */
+export function getDefaultTenantSlug(): string | null {
+  const value = normalizeTenantSlug(process.env.DEFAULT_TENANT_SLUG ?? '')
+
+  return isValidTenantSlug(value) ? value : null
 }
 
 export function normalizeTenantSlug(value: string): string {
