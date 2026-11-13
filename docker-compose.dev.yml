@@ -10,6 +10,9 @@ services:
       && pnpm dev"
     volumes:
       - ./api:/app/api
+      # Volume anônimo: preserva o node_modules instalado na imagem, que o
+      # bind mount acima esconderia (o clone não tem node_modules no host).
+      - /app/api/node_modules
 
   web:
     environment:
@@ -21,3 +24,5 @@ services:
       sh -c "pnpm exec next dev -H 0.0.0.0 -p 3000"
     volumes:
       - ./web:/app/web
+      # Volume anônimo: preserva o node_modules instalado na imagem.
+      - /app/web/node_modules
