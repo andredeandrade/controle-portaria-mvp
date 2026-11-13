@@ -242,7 +242,9 @@ O script [`api/scripts/seed.ts`](api/scripts/seed.ts) popula o banco com dados f
 O que ele faz:
 
 - Cria (ou recria) o condomínio de teste com slug `demo`. **Apaga e recria apenas os dados desse condomínio** — os demais ficam intactos.
-- Gera usuários, moradores (alguns com mais de uma unidade), visitantes, prestadores de serviço, autorizações (vencidas, vigentes e futuras), registros de acesso (incluindo alguns em aberto), eventos com convidados/veículos e ocorrências.
+- Gera um volume realista, com datas relativas a "agora" (sempre recentes): 4 usuários, ~60 moradores (alguns com várias unidades e 1-2 veículos), ~80 visitantes, ~30 prestadores, 30 autorizações (vencidas, vigentes e futuras), ~800 registros de acesso nos últimos 30 dias (mais movimento em dias úteis, picos de manhã, almoço e fim de tarde) + 6-10 em aberto agora, 12 eventos (passados, hoje e futuros) com 8-25 convidados e veículos, e 60 ocorrências de tipos variados.
+- Garante dados de **hoje** (até o horário atual, nunca no futuro) em todos os módulos, para que dashboard e relatórios não fiquem vazios em nenhum período.
+- Insere em lote e leva poucos segundos; ao final imprime o tempo total.
 - Usa uma semente fixa (`faker.seed(42)`), então cada execução gera os mesmos dados.
 - Só roda contra banco local: é bloqueado se `NODE_ENV=production` ou se o host do `DATABASE_URL` não for `localhost`, `127.0.0.1` ou `postgres`.
 - Para popular o banco remoto da demo (ex.: Neon), defina `SEED_ALLOW_REMOTE=demo` (valor exato). Mesmo assim ele só mexe no condomínio `demo`, loga o host e o banco alvo antes de apagar qualquer coisa e continua bloqueado com `NODE_ENV=production`:
