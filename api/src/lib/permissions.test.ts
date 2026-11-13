@@ -9,6 +9,15 @@ describe('lib/permissions', () => {
     expect(hasPermission('ADMIN', 'reports', 'view')).toBe(true)
   })
 
+  it('GESTOR tem o mesmo acesso operacional do ADMIN nos domínios, acessos e relatórios', () => {
+    expect(hasPermission('GESTOR', 'residents', 'create')).toBe(true)
+    expect(hasPermission('GESTOR', 'service-providers', 'remove')).toBe(true)
+    expect(hasPermission('GESTOR', 'events', 'registerAccess')).toBe(true)
+    expect(hasPermission('GESTOR', 'access-records', 'checkIn')).toBe(true)
+    expect(hasPermission('GESTOR', 'access-records', 'checkOut')).toBe(true)
+    expect(hasPermission('GESTOR', 'reports', 'view')).toBe(true)
+  })
+
   it('SEGURANCA (portaria) só visualiza cadastros e não acessa relatórios', () => {
     expect(hasPermission('SEGURANCA', 'residents', 'view')).toBe(true)
     expect(hasPermission('SEGURANCA', 'residents', 'create')).toBe(false)

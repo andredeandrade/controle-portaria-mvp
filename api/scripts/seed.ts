@@ -21,6 +21,7 @@ import { fakerPT_BR as faker } from '@faker-js/faker'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { Prisma, PrismaClient } from '../src/generated/prisma-client/client.js'
 import { encryptText } from '../src/lib/crypto.js'
+import { DEMO_PASSWORD, DEMO_USERS } from '../src/lib/demo-users.js'
 import { hashPassword } from '../src/lib/password.js'
 import {
   BUSINESS_HOUR_WEIGHTS,
@@ -42,7 +43,6 @@ import { assertSeedAllowed } from '../src/lib/seed-guard.js'
 
 const TENANT_SLUG = 'demo'
 const TENANT_NAME = 'Condomínio Demo'
-const DEFAULT_PASSWORD = 'Senha@123'
 
 const COUNTS = {
   residents: 60,
@@ -297,16 +297,10 @@ async function main(): Promise<void> {
     await prisma.user.deleteMany({ where: { condominiumId } })
 
     // --- Usuários -----------------------------------------------------------
-    const passwordHash = await hashPassword(DEFAULT_PASSWORD)
-    const userSpecs = [
-      { role: 'ADMIN', email: 'admin@demo.local', name: 'Admin Demo' },
-      { role: 'GESTOR', email: 'gestor@demo.local', name: 'Gestor Demo' },
-      { role: 'SINDICO', email: 'sindico@demo.local', name: 'Síndico Demo' },
-      { role: 'SEGURANCA', email: 'seguranca@demo.local', name: 'Segurança Demo' },
-    ] as const
+    const passwordHash = await hashPassword(DEMO_PASSWORD)
 
     const users = await Promise.all(
-      userSpecs.map((spec) =>
+      DEMO_USERS.map((spec) =>
         prisma.user.create({ data: { ...spec, condominiumId, passwordHash } }),
       ),
     )
@@ -877,8 +871,8 @@ async function main(): Promise<void> {
     console.log('\nSeed concluído para o condomínio "%s" em %s s:', TENANT_SLUG, elapsedSeconds)
     console.table(summary)
     console.log('Acesse http://demo.localhost:3000 com:')
-    for (const spec of userSpecs) {
-      console.log(`  ${spec.role.padEnd(10)} ${spec.email} / ${DEFAULT_PASSWORD}`)
+    for (const spec of DEMO_USERS) {
+      console.log(`  ${spec.role.padEnd(10)} ${spec.email} / ${DEMO_PASSWORD}`)
     }
   } finally {
     await prisma.$disconnect()
