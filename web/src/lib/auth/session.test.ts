@@ -1,8 +1,9 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import {
   extractTenantSlugFromHost,
   getApiBaseUrls,
+  getDefaultTenantSlug,
   isValidTenantSlug,
   normalizeTenantSlug,
 } from './session'
@@ -28,6 +29,63 @@ describe('extractTenantSlugFromHost', () => {
     ['www no domínio', 'www.portaria.com.br'],
   ])('retorna null para host %s', (_label, host) => {
     expect(extractTenantSlugFromHost(host)).toBeNull()
+  })
+})
+
+describe('extractTenantSlugFromHost com APP_ROOT_DOMAIN', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
+  it.each([
+    ['portaria.com.br', 'demo.portaria.com.br', 'demo'],
+    ['portaria.com.br', 'Alfa.Portaria.com.br:443', 'alfa'],
+    ['.portaria.com.br.', 'demo.portaria.com.br', 'demo'],
+    ['portaria.com.br', 'demo.localhost:3000', 'demo'],
+  ])('com root "%s", host "%s" → "%s"', (root, host, expected) => {
+    vi.stubEnv('APP_ROOT_DOMAIN', root)
+
+    expect(extractTenantSlugFromHost(host)).toBe(expected)
+  })
+
+  it.each([
+    ['portaria.com.br', 'portaria.com.br'],
+    ['portaria.com.br', 'www.portaria.com.br'],
+    ['portaria.com.br', 'outro.dominio.com'],
+    ['app.vercel.app', 'app.vercel.app'],
+    ['app.vercel.app', 'app.vercel.app:443'],
+  ])('com root "%s", host "%s" → null', (root, host) => {
+    vi.stubEnv('APP_ROOT_DOMAIN', root)
+
+    expect(extractTenantSlugFromHost(host)).toBeNull()
+  })
+
+  it('sem APP_ROOT_DOMAIN mantém a heurística legada de 3+ labels', () => {
+    vi.stubEnv('APP_ROOT_DOMAIN', '')
+
+    expect(extractTenantSlugFromHost('app.vercel.app')).toBe('app')
+  })
+})
+
+describe('getDefaultTenantSlug', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
+  it('normaliza o valor de DEFAULT_TENANT_SLUG', () => {
+    vi.stubEnv('DEFAULT_TENANT_SLUG', ' Demo ')
+
+    expect(getDefaultTenantSlug()).toBe('demo')
+  })
+
+  it.each([
+    ['ausente', ''],
+    ['só espaços', '   '],
+    ['curto demais', 'ab'],
+  ])('retorna null quando %s', (_label, value) => {
+    vi.stubEnv('DEFAULT_TENANT_SLUG', value)
+
+    expect(getDefaultTenantSlug()).toBeNull()
   })
 })
 

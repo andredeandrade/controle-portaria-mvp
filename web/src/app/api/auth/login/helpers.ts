@@ -1,5 +1,6 @@
 import {
   extractTenantSlugFromHost,
+  getDefaultTenantSlug,
   getApiBaseUrls,
   isValidTenantSlug,
   normalizeTenantSlug,
@@ -107,13 +108,14 @@ export function resolveTenantSlugFromRequest(request: Request, body: LoginReques
     return normalizedBodySlug
   }
 
-  const hostSlug = extractTenantSlugFromHost(request.headers.get('host'))
+  const tenantSlug =
+    extractTenantSlugFromHost(request.headers.get('host')) ?? getDefaultTenantSlug()
 
-  if (!hostSlug) {
+  if (!tenantSlug) {
     throw new Error(
       'Não foi possível identificar o condomínio pelo subdomínio. Informe o slug do condomínio.',
     )
   }
 
-  return hostSlug
+  return tenantSlug
 }
