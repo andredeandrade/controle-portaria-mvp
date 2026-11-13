@@ -1,0 +1,14 @@
+-- Rename PORTARIA -> SEGURANCA and add GESTOR, SINDICO to UserRole
+ALTER TYPE "UserRole" RENAME TO "UserRole_old";
+CREATE TYPE "UserRole" AS ENUM ('ADMIN', 'GESTOR', 'SINDICO', 'SEGURANCA');
+
+ALTER TABLE "User" ALTER COLUMN "role" DROP DEFAULT;
+ALTER TABLE "User" ALTER COLUMN "role" TYPE "UserRole" USING (
+  CASE "role"::text
+    WHEN 'PORTARIA' THEN 'SEGURANCA'
+    ELSE "role"::text
+  END
+)::"UserRole";
+ALTER TABLE "User" ALTER COLUMN "role" SET DEFAULT 'SEGURANCA';
+
+DROP TYPE "UserRole_old";

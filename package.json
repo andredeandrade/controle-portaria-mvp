@@ -1,0 +1,15 @@
+{
+  "name": "controleportaria-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@9.15.9",
+  "scripts": {
+    "dev": "pnpm --filter ./web dev",
+    "build": "pnpm --filter ./web build",
+    "start": "pnpm --filter ./web start",
+    "lint": "pnpm --filter ./web lint",
+    "format": "pnpm -r format",
+    "format:check": "pnpm -r format:check",
+    "test": "pnpm -r --if-present test"
+  }
+}

@@ -1,0 +1,12 @@
+**/node_modules
+**/.next
+**/out
+**/dist
+**/build
+api/src/generated/prisma-client
+.git
+.env
+**/.env
+**/.env.test
+*.md
+.vscode

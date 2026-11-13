@@ -1,0 +1,23 @@
+services:
+  api:
+    environment:
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: '1'
+      CI: 'true'
+    command: >-
+      sh -c "pnpm prisma:generate
+      && pnpm prisma migrate deploy
+      && pnpm dev"
+    volumes:
+      - ./api:/app/api
+
+  web:
+    environment:
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: '1'
+      WATCHPACK_POLLING: 'true'
+      CI: 'true'
+    command: >-
+      sh -c "pnpm exec next dev -H 0.0.0.0 -p 3000"
+    volumes:
+      - ./web:/app/web
