@@ -245,6 +245,11 @@ O que ele faz:
 - Gera usuários, moradores (alguns com mais de uma unidade), visitantes, prestadores de serviço, autorizações (vencidas, vigentes e futuras), registros de acesso (incluindo alguns em aberto), eventos com convidados/veículos e ocorrências.
 - Usa uma semente fixa (`faker.seed(42)`), então cada execução gera os mesmos dados.
 - Só roda contra banco local: é bloqueado se `NODE_ENV=production` ou se o host do `DATABASE_URL` não for `localhost`, `127.0.0.1` ou `postgres`.
+- Para popular o banco remoto da demo (ex.: Neon), defina `SEED_ALLOW_REMOTE=demo` (valor exato). Mesmo assim ele só mexe no condomínio `demo`, loga o host e o banco alvo antes de apagar qualquer coisa e continua bloqueado com `NODE_ENV=production`:
+
+  ```bash
+  DATABASE_URL='postgresql://...neon.tech/...' SEED_ALLOW_REMOTE=demo pnpm --filter ./api seed
+  ```
 
 > As migrações precisam estar aplicadas e o client Prisma gerado antes de rodar o seed.
 
