@@ -3,6 +3,8 @@
  *
  * Cria (ou recria) o condomínio de teste "demo" com dados em todos os módulos.
  * Só apaga dados do condomínio "demo" — outros condomínios ficam intactos.
+ * Só roda em banco local, ou em banco remoto com SEED_ALLOW_REMOTE=demo
+ * (veja src/lib/seed-guard.ts). Sempre bloqueado com NODE_ENV=production.
  *
  * Uso: pnpm --filter ./api seed
  * Login: http://demo.localhost:3000 com admin@demo.local / Senha@123
@@ -14,6 +16,7 @@ import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaClient } from '../src/generated/prisma-client/client.js'
 import { encryptText } from '../src/lib/crypto.js'
 import { hashPassword } from '../src/lib/password.js'
+import { assertSeedAllowed } from '../src/lib/seed-guard.js'
 
 // ---------------------------------------------------------------------------
 // Configuração
@@ -98,23 +101,6 @@ const EVENT_TITLES = [
 const INCIDENT_PLACES = ['Portaria', 'Garagem', 'Bloco A', 'Bloco B', 'Bloco C', 'Piscina', 'Playground', 'Estacionamento']
 
 // ---------------------------------------------------------------------------
-// Proteções: nunca rodar fora do ambiente local
-// ---------------------------------------------------------------------------
-
-function assertLocalEnvironment(databaseUrl: string): void {
-  if (process.env['NODE_ENV'] === 'production') {
-    throw new Error('Seed bloqueado: NODE_ENV=production.')
-  }
-
-  const host = new URL(databaseUrl).hostname
-  const allowedHosts = new Set(['localhost', '127.0.0.1', 'postgres'])
-
-  if (!allowedHosts.has(host)) {
-    throw new Error(`Seed bloqueado: DATABASE_URL aponta para "${host}", que não é um banco local.`)
-  }
-}
-
-// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
@@ -191,7 +177,15 @@ async function main(): Promise<void> {
     throw new Error('DATABASE_URL não definida (confira api/.env).')
   }
 
-  assertLocalEnvironment(databaseUrl)
+  const target = assertSeedAllowed({
+    databaseUrl,
+    nodeEnv: process.env['NODE_ENV'],
+    allowRemote: process.env['SEED_ALLOW_REMOTE'],
+  })
+  console.log(
+    `Seed alvo: ${target.host}/${target.database} (${target.remote ? 'REMOTO, liberado por SEED_ALLOW_REMOTE=demo' : 'local'})`,
+  )
+  console.log(`Serão apagados e recriados os dados do condomínio "${TENANT_SLUG}".`)
   faker.seed(42)
 
   const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: databaseUrl }) })
