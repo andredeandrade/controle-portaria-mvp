@@ -34,6 +34,7 @@ services:
       DATA_ENCRYPTION_KEY: ${DATA_ENCRYPTION_KEY:?defina DATA_ENCRYPTION_KEY no .env}
       PLATFORM_SETUP_SECRET: ${PLATFORM_SETUP_SECRET:?defina PLATFORM_SETUP_SECRET no .env}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      DEMO_MODE: ${DEMO_MODE:-}
     depends_on:
       postgres:
         condition: service_healthy

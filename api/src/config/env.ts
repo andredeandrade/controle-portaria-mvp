@@ -33,6 +33,29 @@ function trustProxy(): number | false {
   return hops
 }
 
+/**
+ * Modo demonstração (`DEMO_MODE`): a API pública de portfólio não aceita o setup de
+ * plataforma (criar condomínios, bootstrap de usuários via `PLATFORM_SETUP_SECRET`) nem a
+ * troca do slug do condomínio. Lido a cada chamada, para ser testável com `vi.stubEnv`.
+ *
+ * Aceita só `true`, `false` ou ausente/vazio. Qualquer outro valor (`TRUE`, `1`, ` true`)
+ * lança erro em vez de virar "desligado" em silêncio: um typo no painel do provedor não pode
+ * reabrir o segredo de setup numa demo pública. A validação também roda no boot (abaixo).
+ */
+export function isDemoMode(): boolean {
+  const raw = process.env['DEMO_MODE']
+
+  if (raw === undefined || raw === '' || raw === 'false') {
+    return false
+  }
+
+  if (raw === 'true') {
+    return true
+  }
+
+  throw new Error('DEMO_MODE inválido: use "true", "false" ou deixe vazio.')
+}
+
 const MIN_SECRET_LENGTH = 32
 const WEAK_SECRET_MARKER = 'change-me'
 
@@ -63,6 +86,9 @@ export const env = {
   nodeEnv: process.env['NODE_ENV'] ?? 'development',
   platformSetupSecret: required('PLATFORM_SETUP_SECRET'),
 } as const
+
+// Falha no boot se DEMO_MODE tiver valor não reconhecido.
+isDemoMode()
 
 if (env.nodeEnv === 'production') {
   if (env.corsOrigin === '*') {
