@@ -12,6 +12,9 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useLogin } from '../hooks/useLogin'
+import { DEMO_PASSWORD, isDemoMode, type DemoAccount } from '../demo'
+import { DemoBanner } from './DemoBanner'
+import { DemoQuickLogin } from './DemoQuickLogin'
 import { TextField, TextFieldLabel, TextFieldStack } from '@/modules/form'
 import { useAppSnackbar } from '@/providers'
 
@@ -28,6 +31,7 @@ export function LoginFormFields() {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormData>({
     defaultValues: {
@@ -54,8 +58,19 @@ export function LoginFormFields() {
     }
   }
 
+  const demoMode = isDemoMode()
+  const isPending = isSubmitting || loginMutation.isPending
+
+  const handleDemoLogin = (account: DemoAccount) => {
+    setValue('email', account.email)
+    setValue('password', DEMO_PASSWORD)
+    void handleSubmit(onSubmit)()
+  }
+
   return (
     <Stack sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 4, sm: 5.5 } }}>
+      {demoMode && <DemoBanner />}
+
       <Stack spacing={0.75} alignItems="center">
         <Box
           sx={{
@@ -144,10 +159,12 @@ export function LoginFormFields() {
           color="primary"
           size="large"
           fullWidth
-          disabled={isSubmitting || loginMutation.isPending}
+          disabled={isPending}
         >
-          {isSubmitting || loginMutation.isPending ? 'Entrando...' : 'Entrar'}
+          {isPending ? 'Entrando...' : 'Entrar'}
         </Button>
+
+        {demoMode && <DemoQuickLogin onSelect={handleDemoLogin} disabled={isPending} />}
       </Stack>
     </Stack>
   )
