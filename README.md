@@ -95,7 +95,7 @@ Navegador ──► Next.js (web :3000)
 
 ```bash
 ./scripts/setup-env.sh
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d -V
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d -V --wait
 docker compose exec api pnpm seed
 ```
 
@@ -211,7 +211,7 @@ Para desenvolvimento com atualização automática (hot reload) no frontend e ba
 Subir ambiente dev:
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d -V
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d -V --wait
 ```
 
 Acompanhar logs do web e api:
@@ -233,6 +233,7 @@ Com esse modo:
 - alterações em `web/` e `api/` são refletidas automaticamente sem rebuild completo da imagem
 - `node_modules` de `web` e `api` vêm da imagem (volumes anônimos), não do host — não é preciso rodar `pnpm install` na máquina para usar o Docker
 - a flag `-V` (`--renew-anon-volumes`) recria esses volumes a cada `up`; sem ela, depois de mudar dependências o container continuaria usando o `node_modules` antigo
+- a flag `--wait` faz o comando só retornar quando a `api` estiver saudável, ou seja, com o client Prisma gerado e as migrations aplicadas; sem ela, um `pnpm seed` logo em seguida pode falhar com `The table ... does not exist`
 
 ## Dados de teste (seed)
 
@@ -250,7 +251,7 @@ O que ele faz:
 Pelo Docker (ambiente dev, que já roda `prisma generate` e `migrate deploy` ao subir a API):
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d -V
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d -V --wait
 docker compose exec api pnpm seed
 ```
 
